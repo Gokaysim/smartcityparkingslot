@@ -1,0 +1,5 @@
+build
+*.cooja
+*.out
+gcc-arm-none-*
+.vscode/
