@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "settings.h"
 #define BASE_SERVER_EP "coap://[fe80::"
 
 char* intToString(int num, char* str, int base) 
@@ -59,8 +60,16 @@ char* intToString(int num, char* str, int base)
 
 char * GET_SERVER_EP_FOR_NODE(int nodeId){
   char *buf = malloc(sizeof(char)*5);
+  for(int i=0;i<5;i++)
+  {
+      buf[i]='-';
+  }
   intToString(nodeId+512, buf, 16);
   char *val = malloc(sizeof(char) * 50 );
+  for(int i=0;i<50;i++)
+  {
+      val[i]='-';
+  }
   val[0] = '\0';
 
   strcat(val,BASE_SERVER_EP);
@@ -77,4 +86,8 @@ char * GET_SERVER_EP_FOR_NODE(int nodeId){
 
   printf("%s \n",val);
   return val;
+}
+
+int getRandomEventGeneratorInverval(){
+    return (rand()%(RANDOM_GENERATOR_INTERVAL_MAX-RANDOM_GENERATOR_INTERVAL_MIN))+RANDOM_GENERATOR_INTERVAL_MIN;
 }

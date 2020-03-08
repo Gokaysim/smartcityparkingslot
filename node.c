@@ -44,18 +44,13 @@ void client_chunk_handler(coap_message_t *response)
 }
 
 
-
 PROCESS(er_example_server, "Node Server");
 AUTOSTART_PROCESSES(&er_example_server);
 
 //Static variables
 static struct etimer scheduledTimer;
 static struct etimer randomEventGenerator;
-
-//Helper Functions
-int getRandomEventGeneratorInverval(){
-    return (rand()%(RANDOM_GENERATOR_INTERVAL_MAX-RANDOM_GENERATOR_INTERVAL_MIN))+RANDOM_GENERATOR_INTERVAL_MIN;
-}
+static char* sendToIpv6 = NULL;
 
 void sendToOtherNodes(){
   int totalCount = get_left_length_list() + get_right_length_list();  
@@ -76,17 +71,16 @@ PROCESS_THREAD(er_example_server, ev, data)
    * WARNING: Activating twice only means alternate path, not two instances!
    * All static variables are the same for each URI path.
    */
+  // coap_init_engine();
   coap_activate_resource(&res_data, "data/send");
   srand(time(NULL));
 
   etimer_set(&scheduledTimer, SCHEDULED_TIMER_INVERVAL);
   etimer_set(&randomEventGenerator,getRandomEventGeneratorInverval());
 
-  // test();
-  int continueLoop = 1;
-  while(continueLoop) {
+  while(1) {
     PROCESS_WAIT_EVENT();
-    if(etimer_expired(&scheduledTimer)) {      
+    if(etimer_expired(&scheduledTimer)) {  
       sendToOtherNodes();
 
       if(output[0]!=NULL)
@@ -97,35 +91,40 @@ PROCESS_THREAD(er_example_server, ev, data)
       {
         requestCount+=1;
       }
-      //Request send
-      if(output[0]!=NULL)
-      {
-        // printf("left %s\n",output[0]);
-        // LOG_SENT(node_id-1,output[0]);
-        // char * leftEndPoint = GET_SERVER_EP_FOR_NODE(node_id-1);
-        // coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
-        // coap_set_header_uri_path(request,"/data/send"); 
+      // Request send
+      if(output[0]!=NULL && node_id != MIN_NODE_ID)
+      {        
+        printf("left %s\n",output[0]);
+        int sendNodeId = node_id-1;
+        LOG_SENT(sendNodeId,output[0]);      
+        sendToIpv6 = GET_SERVER_EP_FOR_NODE(sendNodeId);
+        coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
+        coap_set_header_uri_path(request,"/data/send"); 
 
-        // coap_endpoint_parse(leftEndPoint, strlen(leftEndPoint), &server_ep);      
-        // coap_set_payload(request, (uint8_t *)output[0], strlen(output[0]));                 
-        // COAP_BLOCKING_REQUEST(&server_ep, request, client_chunk_handler);
+        coap_endpoint_parse(sendToIpv6, strlen(sendToIpv6), &server_ep);      
+        coap_set_payload(request, (uint8_t *)output[0], strlen(output[0]));                 
+        COAP_BLOCKING_REQUEST(&server_ep, request, client_chunk_handler);
+        free(sendToIpv6);
       }
 
-      if(output[1]!=NULL)
+      if(output[1]!=NULL && node_id != MAX_NODE_ID)
       {
-        // printf("right %s\n",output[1]);
-        // LOG_SENT(node_id+1,output[1]);
-        // char * rightEndPoint = GET_SERVER_EP_FOR_NODE(node_id+1);
-        // coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
-        // coap_set_header_uri_path(request,"/data/send"); 
-        // coap_endpoint_parse(rightEndPoint, strlen(rightEndPoint), &server_ep);                        
+      
+        printf("right %s\n",output[1]);
+        int sendNodeId = node_id+1;
+        LOG_SENT(sendNodeId,output[1]);
+        sendToIpv6 = GET_SERVER_EP_FOR_NODE(sendNodeId);        
+        coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
+        coap_set_header_uri_path(request,"/data/send"); 
+        coap_endpoint_parse(sendToIpv6, strlen(sendToIpv6), &server_ep);                        
 
-        // coap_set_payload(request, (uint8_t *)output[1], strlen(output[1]));
-        // COAP_BLOCKING_REQUEST(&server_ep, request, client_chunk_handler);
+        coap_set_payload(request, (uint8_t *)output[1], strlen(output[1]));
+        COAP_BLOCKING_REQUEST(&server_ep, request, client_chunk_handler);
+        free(sendToIpv6);
       }
-      etimer_set(&scheduledTimer, SCHEDULED_TIMER_INVERVAL);     
+      etimer_set(&scheduledTimer, SCHEDULED_TIMER_INVERVAL);
     }
-    else if(etimer_expired(&randomEventGenerator)) {
+    if(etimer_expired(&randomEventGenerator)) {
       if(isEmpty == 0 )
       {
         isEmpty = 1;
@@ -144,35 +143,39 @@ PROCESS_THREAD(er_example_server, ev, data)
       {
         requestCount+=1;
       }
-      //Request send
-      if(output[0]!=NULL)
+      // Request send
+      if(output[0]!=NULL && node_id != MIN_NODE_ID )
       {
+        int sendNodeId = node_id-1;
+        LOG_SENT(sendNodeId,output[0]);
         printf("left %s\n",output[0]);
-        LOG_SENT(node_id-1,output[0]);
-        char * leftEndPoint = GET_SERVER_EP_FOR_NODE(node_id-1);
+        sendToIpv6 = GET_SERVER_EP_FOR_NODE(sendNodeId);
         coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
         coap_set_header_uri_path(request,"/data/send"); 
 
-        coap_endpoint_parse(leftEndPoint, strlen(leftEndPoint), &server_ep);      
+        coap_endpoint_parse(sendToIpv6, strlen(sendToIpv6), &server_ep);      
         coap_set_payload(request, (uint8_t *)output[0], strlen(output[0]));                 
-        COAP_BLOCKING_REQUEST(&server_ep, request, client_chunk_handler);
+        COAP_BLOCKING_REQUEST(&server_ep, request, client_chunk_handler);        
+        free(sendToIpv6);
       }
 
-      if(output[1]!=NULL)
+      if(output[1]!=NULL && node_id != MAX_NODE_ID)
       {
+        int sendNodeId = node_id+1;
         printf("right %s\n",output[1]);
-        LOG_SENT(node_id+1,output[1]);
-        char * rightEndPoint = GET_SERVER_EP_FOR_NODE(node_id+1);
+        LOG_SENT(sendNodeId,output[1]);
+        sendToIpv6 = GET_SERVER_EP_FOR_NODE(sendNodeId);
         coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
         coap_set_header_uri_path(request,"/data/send"); 
-        coap_endpoint_parse(rightEndPoint, strlen(rightEndPoint), &server_ep);                        
+        coap_endpoint_parse(sendToIpv6, strlen(sendToIpv6), &server_ep);                        
 
         coap_set_payload(request, (uint8_t *)output[1], strlen(output[1]));
         COAP_BLOCKING_REQUEST(&server_ep, request, client_chunk_handler);
+        free(sendToIpv6);
       }
       etimer_set(&randomEventGenerator,getRandomEventGeneratorInverval());
     }   
-  }  
+  }
   PROCESS_END();
 }
 

@@ -143,10 +143,9 @@ struct data_list_struct *  deserialize(int nodeId,char * input){
     char *nodeIdStr=NULL,*emptynessStr=NULL;
     if(input!= NULL){
         nodeIdStr = strtok(input,"|");
+        
         int requestNodeId = atoi(nodeIdStr);
-        free(nodeIdStr);
         int nodeDiff = nodeId - requestNodeId;
-
 
         emptynessStr = strtok(NULL,"|");
 
@@ -199,7 +198,7 @@ struct data_list_struct *  deserialize(int nodeId,char * input){
         
         addNewIds(notEmptyNodeIdList,notEmptyCount);
         free(notEmptyNodeIdList);
-    }    
+    }        
 
     return head;
 }

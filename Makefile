@@ -14,11 +14,19 @@ MODULES_REL += ./resources
 # MODULES += $(CONTIKI_NG_APP_LAYER_DIR)/coap
 
 PROJECT_SOURCEFILES += data.c
-# PROJECT_SOURCEFILES += test.c
 PROJECT_SOURCEFILES += dataAggOptimizer.c
 PROJECT_SOURCEFILES += serialize.c
 PROJECT_SOURCEFILES += helpers.c
+PROJECT_SOURCEFILES += rest.c
 
 CONTIKI=../..
 include $(CONTIKI)/Makefile.include
-WERROR=0
+# WERROR=0
+CFLAGS += -Wno-error
+
+# -WERROR=
+# Wunused-function=1
+# Wunused-label=1
+# Wunused-parameter=1
+# Wunused-value=1
+# Wunused-variable=1

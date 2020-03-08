@@ -26,21 +26,16 @@ RESOURCE(res_data,
 static void
 res_any_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  /* The ETag and Token is copied to the header. */
-  uint8_t opaque[] = { 0x0A, 0xBC, 0xDE };
-  const uint8_t *ch unk;
-  const char *str = NULL;
+  const uint8_t *chunk;
   coap_get_payload(request, &chunk);
-  
   LOG_RECEIVED((char *)chunk);
-  struct data_list_struct * data= deserialize((char *)chunk,node_id);
+  struct data_list_struct * data= deserialize(node_id,(char *)chunk);
 
   struct data_list_struct *  iterator = data;
-  while(iterator!=null)
+  while(iterator!=NULL)
   {
     add_to_list(iterator->nodeId,iterator->isEmpty,iterator->emptyDataSentDirection);
     iterator = iterator->next;
   }
   destroy_list(data);
-
 }
