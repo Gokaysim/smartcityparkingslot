@@ -9,6 +9,12 @@ struct data_optimizer_node{
 
 void initOptimizer();
 
-void addNewIds(int * ids,int count);
+void addNewIds(int * ids,int count,int isNewEvent);
+
+
+long getScheduleInterval();
+
+int getPreviousNodeId(int nodeId);
+int getNextNodeId(int nodeId);
 
 

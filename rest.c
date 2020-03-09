@@ -5,6 +5,7 @@
 #include "sys/node-id.h"
 #include "log.h"
 #include "serialize.h"
+#include "settings.h"
 
 /* Log configuration */
 #include "sys/log.h"
@@ -39,5 +40,9 @@ res_any_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
   }
   destroy_list(data);
 
-  // print_all_head();
+  if(node_id == MIN_NODE_ID || node_id == MAX_NODE_ID)
+  {
+    print_all_head();
+  }
+  
 }

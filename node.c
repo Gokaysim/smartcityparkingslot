@@ -26,6 +26,7 @@
 
 static coap_message_t request[1];
 static coap_endpoint_t server_ep;
+static clock_time_t startTime = 0;
 extern coap_resource_t
   res_data;
   static char ** output;
@@ -50,6 +51,7 @@ void sendToOtherNodes(){
   output = 
   serialize(node_id,data);  
 }
+static int dataGenerated = 0;
 static int isEmpty = 1;
 PROCESS_THREAD(er_example_server, ev, data)
 {
@@ -65,21 +67,24 @@ PROCESS_THREAD(er_example_server, ev, data)
   initOptimizer();
   coap_activate_resource(&res_data, "data/send");
   srand(time(NULL));
+  startTime = clock_time();
 
-  etimer_set(&scheduledTimer, SCHEDULED_TIMER_INVERVAL);
+  etimer_set(&scheduledTimer, MIN_SCHEDULED_TIME);
   etimer_set(&randomEventGenerator,getRandomEventGeneratorInverval());
 
   while(1) {
     PROCESS_WAIT_EVENT();
-    if(etimer_expired(&scheduledTimer)&&false) { 
-      printf("scheduled\n");
+    if((clock_time()-startTime)> PROCESS_STOP)
+    {
+      break;
+    }
+    if(etimer_expired(&scheduledTimer)) { 
       sendToOtherNodes();
 
       // Request send
       if(output[0]!=NULL && node_id != MIN_NODE_ID)
-      {        
-        printf("left %s\n",output[0]);
-        int sendNodeId = node_id-1;
+      {
+        int sendNodeId = getPreviousNodeId(node_id);
         LOG_SENT(sendNodeId,output[0]);      
         sendToIpv6 = GET_SERVER_EP_FOR_NODE(sendNodeId);
         coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
@@ -93,9 +98,7 @@ PROCESS_THREAD(er_example_server, ev, data)
 
       if(output[1]!=NULL && node_id != MAX_NODE_ID)
       {
-      
-        printf("right %s\n",output[1]);
-        int sendNodeId = node_id+1;
+        int sendNodeId = getNextNodeId(node_id);
         LOG_SENT(sendNodeId,output[1]);
         sendToIpv6 = GET_SERVER_EP_FOR_NODE(sendNodeId);        
         coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
@@ -106,10 +109,14 @@ PROCESS_THREAD(er_example_server, ev, data)
         COAP_BLOCKING_REQUEST(&server_ep, request, client_chunk_handler);
         free(sendToIpv6);
       }
-      etimer_set(&scheduledTimer, SCHEDULED_TIMER_INVERVAL);
+      etimer_set(&scheduledTimer, getScheduleInterval());
     }
-    if(etimer_expired(&randomEventGenerator)) {
-      printf("event\n");
+    if(etimer_expired(&randomEventGenerator) 
+     && (clock_time()-startTime)< EVENT_GENERATION_STOP
+     //&& dataGenerated == 0 && (node_id ==1 || node_id == 7)
+     ) {
+      
+      dataGenerated=1;
       if(isEmpty == 0 )
       {
         isEmpty = 1;
@@ -117,15 +124,16 @@ PROCESS_THREAD(er_example_server, ev, data)
       else{
         isEmpty = 0;
       }
+      LOG_AVAILABILITY(isEmpty);
       add_to_top_of_list(node_id,isEmpty,0);
       sendToOtherNodes();
 
       // Request send
       if(output[0]!=NULL && node_id != MIN_NODE_ID )
       {
-        int sendNodeId = node_id-1;
+        printf("%d %d\n",MIN_NODE_ID,node_id);
+        int sendNodeId = getPreviousNodeId(node_id);
         LOG_SENT(sendNodeId,output[0]);
-        printf("left %s\n",output[0]);
         sendToIpv6 = GET_SERVER_EP_FOR_NODE(sendNodeId);
         coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
         coap_set_header_uri_path(request,"/data/send"); 
@@ -138,8 +146,7 @@ PROCESS_THREAD(er_example_server, ev, data)
 
       if(output[1]!=NULL && node_id != MAX_NODE_ID)
       {
-        int sendNodeId = node_id+1;
-        printf("right %s\n",output[1]);
+        int sendNodeId = getNextNodeId(node_id);
         LOG_SENT(sendNodeId,output[1]);
         sendToIpv6 = GET_SERVER_EP_FOR_NODE(sendNodeId);
         coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
@@ -153,6 +160,8 @@ PROCESS_THREAD(er_example_server, ev, data)
       etimer_set(&randomEventGenerator,getRandomEventGeneratorInverval());
     }   
   }
+
+  printf("PROCESS ENDED\n");
   PROCESS_END();
 }
 

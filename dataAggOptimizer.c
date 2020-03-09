@@ -16,21 +16,24 @@ void initOptimizer(){
     clock_init();
 }
 
-int getNextNodeId(nodeId)
+int getNextNodeId(int nodeId)
 {
     #ifdef OPTIMIZE
     return nodeId+1;
     #else    
     struct data_optimizer_node * iterator = head;
     int maxNodeId = nodeId +1;
+    int count = 0;
     while(iterator !=NULL)
     {
+        count=count+1;
         if(maxNodeId<iterator->nodeId)
         {
             maxNodeId = iterator->nodeId;
         }
         iterator = iterator->next;        
     }
+    printf("node Id %d max node id %d count: %d\n",nodeId,maxNodeId,count);
     return maxNodeId;    
     #endif
 }
@@ -42,20 +45,25 @@ int getPreviousNodeId(int nodeId)
     #else    
     struct data_optimizer_node * iterator = head;
     int minNodeId = nodeId -1;
+    int count = 0;
     while(iterator !=NULL)
     {
-        if(minNodeId < iterator->nodeId)
+        count = count +1;
+        if(minNodeId > iterator->nodeId)
         {
             minNodeId = iterator->nodeId;
         }
         iterator = iterator->next;        
     }
+    printf("node Id %d min node id %d count: %d\n",nodeId,minNodeId,count);
     return minNodeId;    
     #endif
 }
 
 long getScheduleInterval()
 {
+    #ifdef OPTIMIZE
+    
     struct data_optimizer_node * iterator = head;
     int count = 0;
     while(iterator !=NULL)
@@ -75,41 +83,54 @@ long getScheduleInterval()
     }
 
     return interval;
+    #else
+    return 1;
+    #endif
 }
 
-void addNewIds(int * ids,int count){
+void addNewIds(int * ids,int count,int isNewEvent){
     
     if(count>0)
     {
-        averageDataReceiveCount = ((float)(averageDataReceiveCount *totalReceiveCount +count))/(totalReceiveCount +1);
+        if(isNewEvent>0)
+        {
+            averageDataReceiveCount = ((float)(averageDataReceiveCount *(totalReceiveCount+1) +count))/(totalReceiveCount +1);
+        }
+        else{
+            averageDataReceiveCount = ((float)(averageDataReceiveCount *totalReceiveCount +count))/(totalReceiveCount +1);
+        }
+        
         
         averagaDataReceiveInterval = (totalReceiveCount * averagaDataReceiveInterval + clock_time() - lastDataReceive)
         /(totalReceiveCount+1);
         
-        if ((clock_time() - lastDataReceive)>200)
-        {
-            totalReceiveCount = totalReceiveCount +1;
-        }
+        
+        
         
         averagaDataReceiveIntervalDataCount = (totalDataReceiveCount * averagaDataReceiveIntervalDataCount + clock_time() - lastDataReceive)
         /(totalDataReceiveCount+count);        
         
         totalDataReceiveCount = totalDataReceiveCount + count;    
 
+        if(isNewEvent>0)
+        {
+            totalReceiveCount = totalReceiveCount +1;
+        }
+        
         lastDataReceive= clock_time();
     }
 
-    printf("averagaDataReceiveInterval: %ld \n",averagaDataReceiveInterval);
-    printf("averagaDataReceiveIntervalDataCount: %ld\n",averagaDataReceiveIntervalDataCount);
-    printf("totalDataReceiveCount: %d\n",totalDataReceiveCount);
-    printf("totalReceiveCount: %d\n",totalReceiveCount);
-    printf("averageDataReceiveCount: %.2f\n",averageDataReceiveCount);
-    printf("count: %d \n",count);
+    // printf("averagaDataReceiveInterval: %ld \n",averagaDataReceiveInterval);
+    // printf("averagaDataReceiveIntervalDataCount: %ld\n",averagaDataReceiveIntervalDataCount);
+    // printf("totalDataReceiveCount: %d\n",totalDataReceiveCount);
+    // printf("totalReceiveCount: %d\n",totalReceiveCount);
+    // printf("averageDataReceiveCount: %.2f\n",averageDataReceiveCount);
+    // printf("count: %d \n",count);
 
     for(int i=0;i<count;i++){
         struct data_optimizer_node * iterator = head;
         struct data_optimizer_node * tail = head;
-        int alreadyExists = 0;\     
+        int alreadyExists = 0;    
         while(iterator != NULL)
         {            
             if(iterator->nodeId == ids[i]){
@@ -123,9 +144,9 @@ void addNewIds(int * ids,int count){
         {
             if(tail == NULL)
             {
-                tail = (struct data_optimizer_node *)malloc(sizeof(struct data_optimizer_node));
-                tail->nodeId = ids[i];
-                tail->next = NULL;
+                head = (struct data_optimizer_node *)malloc(sizeof(struct data_optimizer_node));
+                head->nodeId = ids[i];
+                head->next = NULL;
             }
             else {
                 tail->next = (struct data_optimizer_node *)malloc(sizeof(struct data_optimizer_node));

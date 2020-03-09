@@ -178,7 +178,7 @@ struct data_list_struct *  deserialize(int nodeId,char * input){
             iterator->nodeId = emptyNodeIdList[i];
             iterator->next = NULL;
         }        
-        addNewIds(emptyNodeIdList,emptyCount);
+        addNewIds(emptyNodeIdList,emptyCount,0);
         free(emptyNodeIdList);
         for(int i=0;i<notEmptyCount;i++)
         {
@@ -196,7 +196,7 @@ struct data_list_struct *  deserialize(int nodeId,char * input){
             iterator->nodeId = notEmptyNodeIdList[i];
             iterator->next = NULL;
         }        
-        addNewIds(notEmptyNodeIdList,notEmptyCount);
+        addNewIds(notEmptyNodeIdList,notEmptyCount,1);
         free(notEmptyNodeIdList);        
     }        
 
