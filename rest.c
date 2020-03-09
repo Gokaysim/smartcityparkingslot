@@ -38,4 +38,6 @@ res_any_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
     iterator = iterator->next;
   }
   destroy_list(data);
+
+  // print_all_head();
 }

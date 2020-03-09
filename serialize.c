@@ -138,7 +138,6 @@ char** serialize(int nodeId, struct data_list_struct * data){
 
 struct data_list_struct *  deserialize(int nodeId,char * input){
     
-    printf("%s\n",input);
     struct data_list_struct * head = NULL;
     char *nodeIdStr=NULL,*emptynessStr=NULL;
     if(input!= NULL){
@@ -162,13 +161,13 @@ struct data_list_struct *  deserialize(int nodeId,char * input){
         int notEmptyCount;
         int * notEmptyNodeIdList= parseStrToNodes(notEmptyIdsStr,&notEmptyCount);
 
-
-        struct data_list_struct * iterator = head;
+        struct data_list_struct * iterator = NULL;
         for(int i=0;i<emptyCount;i++)
         {
             if(iterator == NULL)
             {
                 iterator = (struct data_list_struct *)malloc(sizeof(struct data_list_struct));
+                head = iterator;
             }
             else{  
                 iterator->next = (struct data_list_struct *)malloc(sizeof(struct data_list_struct));
@@ -177,8 +176,8 @@ struct data_list_struct *  deserialize(int nodeId,char * input){
             iterator->isEmpty = 1;
             iterator->emptyDataSentDirection = nodeDiff;
             iterator->nodeId = emptyNodeIdList[i];
-        }
-
+            iterator->next = NULL;
+        }        
         addNewIds(emptyNodeIdList,emptyCount);
         free(emptyNodeIdList);
         for(int i=0;i<notEmptyCount;i++)
@@ -186,6 +185,7 @@ struct data_list_struct *  deserialize(int nodeId,char * input){
             if(iterator == NULL)
             {
                 iterator = (struct data_list_struct *)malloc(sizeof(struct data_list_struct));
+                head = iterator;
             }
             else{  
                 iterator->next = (struct data_list_struct *)malloc(sizeof(struct data_list_struct));
@@ -194,10 +194,10 @@ struct data_list_struct *  deserialize(int nodeId,char * input){
             iterator->isEmpty = 0;
             iterator->emptyDataSentDirection = nodeDiff;
             iterator->nodeId = notEmptyNodeIdList[i];
-        }
-        
+            iterator->next = NULL;
+        }        
         addNewIds(notEmptyNodeIdList,notEmptyCount);
-        free(notEmptyNodeIdList);
+        free(notEmptyNodeIdList);        
     }        
 
     return head;

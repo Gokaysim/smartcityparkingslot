@@ -2,6 +2,9 @@
 #include "data.h"
 #include <stdlib.h>
 
+#include "contiki.h"
+#include "sys/node-id.h"
+
 struct data_list_struct * head;
 
 
@@ -32,7 +35,6 @@ void add_to_list(int nodeId,int isEmpty,int emptyDataSentDirection)
         last = iterator;
         iterator = iterator->next; 
     }
-    
     last->next = (struct data_list_struct *) malloc(sizeof(struct data_list_struct));
 
     last->next->isEmpty = isEmpty;
@@ -42,7 +44,8 @@ void add_to_list(int nodeId,int isEmpty,int emptyDataSentDirection)
 }
 
 struct data_list_struct * pop_n_from_list(int n){
-    
+
+   
     if(head == NULL)
     {
         return NULL;
@@ -58,10 +61,7 @@ struct data_list_struct * pop_n_from_list(int n){
             head = iterator->next;
             iterator->next= NULL;            
             break;
-        }
-        else if(n<0){
-
-        }
+        }        
         iterator = iterator->next;
     }
 
@@ -116,7 +116,7 @@ void destroy_list(struct data_list_struct * listOfHeader){
         return;
     }
     while (1)
-    {        
+    {     
         struct data_list_struct * next = listOfHeader->next;
         free(listOfHeader);
         listOfHeader = next;

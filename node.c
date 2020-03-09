@@ -24,23 +24,13 @@
 #define LOG_LEVEL LOG_LEVEL_APP
 #define SERVER_EP "coap://[fe80::201:1:1:1]"
 
-
-
 static coap_message_t request[1];
 static coap_endpoint_t server_ep;
 extern coap_resource_t
   res_data;
   static char ** output;
-static int requestCount =0;
 void client_chunk_handler(coap_message_t *response)
-{
-  requestCount = requestCount-1;
-  if(requestCount == 0)
-  {
-    free(output[0]);
-    free(output[1]);
-    free(output);
-  }    
+{  
 }
 
 
@@ -72,6 +62,7 @@ PROCESS_THREAD(er_example_server, ev, data)
    * All static variables are the same for each URI path.
    */
   // coap_init_engine();
+  initOptimizer();
   coap_activate_resource(&res_data, "data/send");
   srand(time(NULL));
 
@@ -80,17 +71,10 @@ PROCESS_THREAD(er_example_server, ev, data)
 
   while(1) {
     PROCESS_WAIT_EVENT();
-    if(etimer_expired(&scheduledTimer)) {  
+    if(etimer_expired(&scheduledTimer)&&false) { 
+      printf("scheduled\n");
       sendToOtherNodes();
 
-      if(output[0]!=NULL)
-      {
-        requestCount+=1;
-      }
-      if(output[1]!=NULL)
-      {
-        requestCount+=1;
-      }
       // Request send
       if(output[0]!=NULL && node_id != MIN_NODE_ID)
       {        
@@ -125,6 +109,7 @@ PROCESS_THREAD(er_example_server, ev, data)
       etimer_set(&scheduledTimer, SCHEDULED_TIMER_INVERVAL);
     }
     if(etimer_expired(&randomEventGenerator)) {
+      printf("event\n");
       if(isEmpty == 0 )
       {
         isEmpty = 1;
@@ -135,14 +120,6 @@ PROCESS_THREAD(er_example_server, ev, data)
       add_to_top_of_list(node_id,isEmpty,0);
       sendToOtherNodes();
 
-      if(output[0]!=NULL)
-      {
-        requestCount+=1;
-      }
-      if(output[1]!=NULL)
-      {
-        requestCount+=1;
-      }
       // Request send
       if(output[0]!=NULL && node_id != MIN_NODE_ID )
       {

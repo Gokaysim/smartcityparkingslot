@@ -84,7 +84,6 @@ char * GET_SERVER_EP_FOR_NODE(int nodeId){
   strcat(val,"]");
   free(buf);
 
-  printf("%s \n",val);
   return val;
 }
 

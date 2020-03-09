@@ -7,6 +7,8 @@ struct data_optimizer_node{
 };
 
 
+void initOptimizer();
+
 void addNewIds(int * ids,int count);
 
 
